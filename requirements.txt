@@ -1,3 +1,7 @@
+flake8-import-order==0.9.1
+flake8-print==2.0.2
+flake8==3.0.2
+pep8-naming==0.4.1
 pip==8.1.2
 pretend==1.0.8
 pytest==2.9.2

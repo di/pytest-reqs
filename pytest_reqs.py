@@ -1,4 +1,3 @@
-
 from glob import glob
 from itertools import chain
 
