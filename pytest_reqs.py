@@ -17,6 +17,15 @@ def pytest_addoption(parser):
         '--reqs', action='store_true',
         help="check requirements files against what is installed"
     )
+    parser.addini(
+        "reqsignorelocal",
+        help="ignore local requirements (default: False)",
+    )
+
+
+def pytest_sessionstart(session):
+    config = session.config
+    config.ignore_local = config.getini("reqsignorelocal").lower() == 'true'
 
 
 def pytest_collection_modifyitems(config, session, items):
@@ -36,6 +45,13 @@ def pytest_collection_modifyitems(config, session, items):
     )
 
 
+class PipOption:
+    def __init__(self, config):
+        self.skip_requirements_regex = '^-e' if config.ignore_local else ''
+        self.isolated_mode = False
+        self.default_vcs = None
+
+
 class ReqsError(Exception):
     """ indicates an error during requirements checks. """
 
@@ -49,9 +65,13 @@ class ReqsItem(pytest.Item, pytest.File):
         self.add_marker("reqs")
         self.filename = filename
         self.installed_distributions = installed_distributions
+        self.config = config
 
     def runtest(self):
-        reqs = parse_requirements(self.filename, session=PipSession())
+
+        reqs = parse_requirements(
+            self.filename, session=PipSession(), options=PipOption(self.config)
+        )
 
         try:
             name_to_req = dict(

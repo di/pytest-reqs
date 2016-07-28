@@ -45,6 +45,7 @@ If your environment has dependencies installed like this::
 
 But you have a ``requirements.txt`` file like this::
 
+    $ cat requirements.txt
     foo==1.0.0
 
 you can run ``py.test`` with the plugin installed::
@@ -54,7 +55,6 @@ you can run ``py.test`` with the plugin installed::
     ______________________________ requirements-check ______________________________
     Distribution "foo" requires foo==1.0.0 (from -r requirements.txt (line 1)) but 0.9.9 is installed
 
-
 It also handles ``pip``'s version containment syntax (e.g, ``foo<=1.0.0``,
 ``foo>=1.0.0``, etc)::
 
@@ -63,13 +63,38 @@ It also handles ``pip``'s version containment syntax (e.g, ``foo<=1.0.0``,
     ______________________________ requirements-check ______________________________
     Distribution "foo" requires foo>=1.0.0 (from -r requirements.txt (line 1)) but 0.9.9 is installed
 
-
 Furthermore, it will tell you if your requirements file is invalid (for
 example, if there is not enough ``=`` symbols)::
 
     $ py.test --reqs
     ______________________________ requirements-check ______________________________
-    Invalid requirement: 'foo=1.0.0' (from -r requirements.pip)
+    Invalid requirement: 'foo=1.0.0' (from -r requirements.txt)
+
+Configuring options
+-------------------
+
+Ignoring local projects
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You might have requirements files with paths to local projects, e.g. for local
+development::
+
+    $ cat requirements/local_development.txt
+    -e ../foo
+
+However, testing these requirements will fail if the test environment is
+missing the local project (e.g., on a CI build)::
+
+    =================================== FAILURES ===================================
+    ______________________________ requirements-check ______________________________
+    ../foo should either be a path to a local project or a VCS url beginning with svn+, git+, hg+, or bzr+ (from -r requirements.txt)
+
+To get around this, you can disable checking for local projects with the
+following ``pytest`` option::
+
+    # content of setup.cfg
+    [pytest]
+    reqsignorelocal = True
 
 Running requirements checks and no other tests
 ----------------------------------------------

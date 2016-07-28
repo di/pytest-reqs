@@ -80,3 +80,23 @@ def test_invalid_requirement(requirements, mock_dist, testdir, monkeypatch):
         "*1 failed*",
     ])
     assert 'passed' not in result.stdout.str()
+
+
+def test_missing_local_requirement(testdir, monkeypatch):
+    testdir.makefile('.txt', requirements='-e ../foo')
+    monkeypatch.setattr('pytest_reqs.get_installed_distributions', lambda: [])
+
+    result = testdir.runpytest("--reqs")
+    result.stdout.fnmatch_lines([
+        '*foo should either be a path to a local project*',
+    ])
+    assert 'passed' not in result.stdout.str()
+
+
+def test_local_requirement_ignored(testdir, monkeypatch):
+    testdir.makefile('.txt', requirements='-e ../foo')
+    testdir.makeini('[pytest]\nreqsignorelocal=True')
+    monkeypatch.setattr('pytest_reqs.get_installed_distributions', lambda: [])
+
+    result = testdir.runpytest("--reqs")
+    assert 'passed' in result.stdout.str()
