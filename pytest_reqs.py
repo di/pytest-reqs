@@ -75,7 +75,7 @@ class ReqsItem(pytest.Item, pytest.File):
 
         try:
             name_to_req = dict(
-                (r.name, r)
+                (r.name.lower(), r)
                 for r in reqs
                 if r.name and self.filename in r.comes_from
             )
