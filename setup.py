@@ -6,7 +6,7 @@ if __name__ == "__main__":
         description='pytest plugin to check pinned requirements',
         long_description=open("README.rst").read(),
         license="MIT license",
-        version='0.0.2',
+        version='0.0.3',
         author='Dustin Ingram',
         author_email='github@dustingram.com',
         url='https://github.com/di/pytest-reqs',

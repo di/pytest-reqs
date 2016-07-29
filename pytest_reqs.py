@@ -8,7 +8,7 @@ from pip.req import parse_requirements
 import pytest
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 def pytest_addoption(parser):
