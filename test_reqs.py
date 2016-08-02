@@ -111,3 +111,11 @@ def test_non_lowered_requirement(mock_dist, testdir, monkeypatch):
 
     result = testdir.runpytest("--reqs")
     assert 'passed' in result.stdout.str()
+
+
+def test_no_option(testdir, monkeypatch):
+    testdir.makefile('.txt', requirements='foo')
+    monkeypatch.setattr('pytest_reqs.get_installed_distributions', lambda: [])
+
+    result = testdir.runpytest()
+    assert 'collected 0 items' in result.stdout.str()

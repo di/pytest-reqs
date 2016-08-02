@@ -29,20 +29,21 @@ def pytest_sessionstart(session):
 
 
 def pytest_collection_modifyitems(config, session, items):
-    patterns = [
-        'req*.txt', 'req*.pip', 'requirements/*.txt', 'requirements/*.pip'
-    ]
-    filenames = set(chain.from_iterable(map(glob, patterns)))
+    if config.option.reqs:
+        patterns = [
+            'req*.txt', 'req*.pip', 'requirements/*.txt', 'requirements/*.pip'
+        ]
+        filenames = set(chain.from_iterable(map(glob, patterns)))
 
-    installed_distributions = dict(
-        (d.project_name.lower(), d)
-        for d in get_installed_distributions()
-    )
+        installed_distributions = dict(
+            (d.project_name.lower(), d)
+            for d in get_installed_distributions()
+        )
 
-    items.extend(
-        ReqsItem(filename, installed_distributions, config, session)
-        for filename in filenames
-    )
+        items.extend(
+            ReqsItem(filename, installed_distributions, config, session)
+            for filename in filenames
+        )
 
 
 class PipOption:
