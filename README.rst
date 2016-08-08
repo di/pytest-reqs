@@ -53,7 +53,8 @@ you can run ``py.test`` with the plugin installed::
     $ py.test --reqs
     =================================== FAILURES ===================================
     ______________________________ requirements-check ______________________________
-    Distribution "foo" requires foo==1.0.0 (from -r requirements.txt (line 1)) but 0.9.9 is installed
+    Distribution "foo" requires foo==1.0.0 (from -r requirements.txt (line 1)) but
+    0.9.9 is installed
 
 It also handles ``pip``'s version containment syntax (e.g, ``foo<=1.0.0``,
 ``foo>=1.0.0``, etc)::
@@ -61,7 +62,8 @@ It also handles ``pip``'s version containment syntax (e.g, ``foo<=1.0.0``,
     $ py.test --reqs
     =================================== FAILURES ===================================
     ______________________________ requirements-check ______________________________
-    Distribution "foo" requires foo>=1.0.0 (from -r requirements.txt (line 1)) but 0.9.9 is installed
+    Distribution "foo" requires foo>=1.0.0 (from -r requirements.txt (line 1)) but
+    0.9.9 is installed
 
 Furthermore, it will tell you if your requirements file is invalid (for
 example, if there is not enough ``=`` symbols)::
@@ -87,7 +89,8 @@ missing the local project (e.g., on a CI build)::
 
     =================================== FAILURES ===================================
     ______________________________ requirements-check ______________________________
-    ../foo should either be a path to a local project or a VCS url beginning with svn+, git+, hg+, or bzr+ (from -r requirements.txt)
+    ../foo should either be a path to a local project or a VCS url beginning with
+    svn+, git+, hg+, or bzr+ (from -r requirements.txt)
 
 To get around this, you can disable checking for local projects with the
 following ``pytest`` option::
