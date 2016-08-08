@@ -1,3 +1,4 @@
+import pip
 from pretend import stub
 import pytest
 
@@ -75,10 +76,16 @@ def test_invalid_requirement(requirements, mock_dist, testdir, monkeypatch):
     )
 
     result = testdir.runpytest("--reqs")
-    result.stdout.fnmatch_lines([
-        '*Invalid requirement*',
-        "*1 failed*",
-    ])
+    if pip.__version__ < '8.0.0':
+        result.stdout.fnmatch_lines([
+            '*Expected version spec in*',
+            "*1 failed*",
+        ])
+    else:
+        result.stdout.fnmatch_lines([
+            '*Invalid requirement*',
+            "*1 failed*",
+        ])
     assert 'passed' not in result.stdout.str()
 
 
