@@ -1,0 +1,11 @@
+flake8==3.0.4
+flake8-import-order==0.10
+flake8-print==2.0.2
+mccabe==0.5.2
+pep8-naming==0.4.1
+pretend==1.0.8
+py==1.4.31
+pycodestyle==2.0.0
+pyflakes==1.2.3
+pytest==3.0.3
+pytest-reqs==0.0.4
