@@ -8,4 +8,4 @@ py==1.4.31
 pycodestyle==2.0.0
 pyflakes==1.2.3
 pytest==3.0.3
-pytest-reqs==0.0.4
+-e .
