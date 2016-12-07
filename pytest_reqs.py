@@ -10,6 +10,10 @@ import pytest
 
 __version__ = '0.0.4'
 
+DEFAULT_PATTERNS = [
+    'req*.txt', 'req*.pip', 'requirements/*.txt', 'requirements/*.pip'
+]
+
 
 def pytest_addoption(parser):
     group = parser.getgroup("general")
@@ -21,18 +25,23 @@ def pytest_addoption(parser):
         "reqsignorelocal",
         help="ignore local requirements (default: False)",
     )
+    parser.addini(
+        "reqsfilenamepatterns",
+        help="Override the default filename patterns to search (default:"
+        "req*.txt, req*.pip, requirements/*.txt, requirements/*.pip)",
+        type="linelist",
+    )
 
 
 def pytest_sessionstart(session):
     config = session.config
     config.ignore_local = config.getini("reqsignorelocal").lower() == 'true'
+    config.patterns = config.getini("reqsfilenamepatterns")
 
 
 def pytest_collection_modifyitems(config, session, items):
     if config.option.reqs:
-        patterns = [
-            'req*.txt', 'req*.pip', 'requirements/*.txt', 'requirements/*.pip'
-        ]
+        patterns = config.patterns or DEFAULT_PATTERNS
         filenames = set(chain.from_iterable(map(glob, patterns)))
 
         installed_distributions = dict(
