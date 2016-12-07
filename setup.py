@@ -1,12 +1,14 @@
 from setuptools import setup
 
+__version__ = '0.0.4'
+
 if __name__ == "__main__":
     setup(
         name='pytest-reqs',
         description='pytest plugin to check pinned requirements',
         long_description=open("README.rst").read(),
         license="MIT license",
-        version='0.0.4',
+        version=__version__,
         author='Dustin Ingram',
         author_email='github@dustingram.com',
         url='https://github.com/di/pytest-reqs',
