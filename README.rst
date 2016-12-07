@@ -26,7 +26,7 @@ if you then type::
 
     py.test --reqs
 
-it will search for dependencies in the files matching:
+by default it will search for dependencies in the files matching:
 
 - ``req*.txt``
 - ``req*.pip``
@@ -98,6 +98,31 @@ following ``pytest`` option::
     # content of setup.cfg
     [pytest]
     reqsignorelocal = True
+
+Declaring your own filename patterns
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You might have requirements files in files other than the default filename
+patterns:
+
+- ``req*.txt``
+- ``req*.pip``
+- ``requirements/*.txt``
+- ``requirements/*.pip``
+
+While there aren't any restrictions on what filenames are or are not valid for
+requirements files, the patterns which are currently supported by
+``pytest-reqs`` are the same common patterns supported by other automated tools
+around requirements files.
+
+However, you can override these default patterns with the following ``pytest``
+option::
+
+    # content of setup.cfg
+    [pytest]
+    reqsfilenamepatterns =
+        mycustomrequirementsfile.txt
+        someotherfilename.ext
 
 Running requirements checks and no other tests
 ----------------------------------------------

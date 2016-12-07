@@ -126,3 +126,19 @@ def test_no_option(testdir, monkeypatch):
 
     result = testdir.runpytest()
     assert 'collected 0 items' in result.stdout.str()
+
+
+def test_override_filenamepatterns(testdir, monkeypatch):
+    testdir.makefile('.txt', a='foo')
+    testdir.makefile('.txt', b='bar')
+    testdir.makeini('[pytest]\nreqsfilenamepatterns=\n    a.txt\n    b.txt')
+    monkeypatch.setattr(
+        'pytest_reqs.get_installed_distributions',
+        lambda: [
+            stub(project_name='bar', version='1.0'),
+            stub(project_name='foo', version='1.0'),
+        ],
+    )
+
+    result = testdir.runpytest("--reqs")
+    assert 'passed' in result.stdout.str()
