@@ -124,6 +124,27 @@ option::
         mycustomrequirementsfile.txt
         someotherfilename.ext
 
+Running ``pytest-reqs`` before any other tests
+----------------------------------------------
+
+Currently there is no way to define the order of pytest plugins (see
+`pytest-dev/pytest#935 <https://github.com/pytest-dev/pytest/issues/935>`__)
+
+This means that if you don't use any other plugins, ``pytest-reqs`` will run
+it's tests last. If you do use other plugins, there is no way to guarantee when
+the ``pytest-reqs`` tests will be run.
+
+If you absolutely need to run ``pytest-reqs`` before any other tests and
+plugins, instead of using the ``--reqs`` flag, you can define a
+``tests/conftest.py`` file as follows:
+
+.. code-block:: python
+
+    from pytest_reqs import check_requirements
+
+    def pytest_collection_modifyitems(config, session, items):
+        check_requirements(config, session, items)
+
 Running requirements checks and no other tests
 ----------------------------------------------
 
