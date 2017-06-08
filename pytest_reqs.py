@@ -41,18 +41,22 @@ def pytest_sessionstart(session):
 
 def pytest_collection_modifyitems(config, session, items):
     if config.option.reqs:
-        patterns = config.patterns or DEFAULT_PATTERNS
-        filenames = set(chain.from_iterable(map(glob, patterns)))
+        check_requirements(config, session, items)
 
-        installed_distributions = dict(
-            (d.project_name.lower(), d)
-            for d in get_installed_distributions()
-        )
 
-        items.extend(
-            ReqsItem(filename, installed_distributions, config, session)
-            for filename in filenames
-        )
+def check_requirements(config, session, items):
+    patterns = config.patterns or DEFAULT_PATTERNS
+    filenames = set(chain.from_iterable(map(glob, patterns)))
+
+    installed_distributions = dict(
+        (d.project_name.lower(), d)
+        for d in get_installed_distributions()
+    )
+
+    items.extend(
+        ReqsItem(filename, installed_distributions, config, session)
+        for filename in filenames
+    )
 
 
 class PipOption:
