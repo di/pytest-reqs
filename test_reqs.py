@@ -109,6 +109,18 @@ def test_local_requirement_ignored(testdir, monkeypatch):
     assert 'passed' in result.stdout.str()
 
 
+def test_local_requirement_ignored_using_dynamic_config(testdir, monkeypatch):
+    testdir.makefile('.txt', requirements='-e ../foo')
+    testdir.makeconftest("""
+    def pytest_configure(config):
+        config.ignore_local = True
+    """)
+    monkeypatch.setattr('pytest_reqs.get_installed_distributions', lambda: [])
+
+    result = testdir.runpytest("--reqs")
+    assert 'passed' in result.stdout.str()
+
+
 def test_non_lowered_requirement(mock_dist, testdir, monkeypatch):
     testdir.makefile('.txt', requirements='Foo')
     monkeypatch.setattr(
