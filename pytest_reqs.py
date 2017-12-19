@@ -2,10 +2,10 @@ from glob import glob
 from itertools import chain
 
 from pip import get_installed_distributions
+from pip.commands.list import ListCommand
 from pip.download import PipSession
 from pip.exceptions import InstallationError
 from pip.req import parse_requirements
-from pip.commands.list import ListCommand
 import pytest
 
 
