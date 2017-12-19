@@ -109,6 +109,18 @@ def test_local_requirement_ignored(testdir, monkeypatch):
     assert 'passed' in result.stdout.str()
 
 
+def test_local_requirement_ignored_using_dynamic_config(testdir, monkeypatch):
+    testdir.makefile('.txt', requirements='-e ../foo')
+    testdir.makeconftest("""
+    def pytest_configure(config):
+        config.ignore_local = True
+    """)
+    monkeypatch.setattr('pytest_reqs.get_installed_distributions', lambda: [])
+
+    result = testdir.runpytest("--reqs")
+    assert 'passed' in result.stdout.str()
+
+
 def test_non_lowered_requirement(mock_dist, testdir, monkeypatch):
     testdir.makefile('.txt', requirements='Foo')
     monkeypatch.setattr(
@@ -132,6 +144,25 @@ def test_override_filenamepatterns(testdir, monkeypatch):
     testdir.makefile('.txt', a='foo')
     testdir.makefile('.txt', b='bar')
     testdir.makeini('[pytest]\nreqsfilenamepatterns=\n    a.txt\n    b.txt')
+    monkeypatch.setattr(
+        'pytest_reqs.get_installed_distributions',
+        lambda: [
+            stub(project_name='bar', version='1.0'),
+            stub(project_name='foo', version='1.0'),
+        ],
+    )
+
+    result = testdir.runpytest("--reqs")
+    assert 'passed' in result.stdout.str()
+
+
+def test_override_filenamepatterns_using_dynamic_config(testdir, monkeypatch):
+    testdir.makefile('.txt', a='foo')
+    testdir.makefile('.txt', b='bar')
+    testdir.makeconftest("""
+    def pytest_configure(config):
+        config.patterns = ['a.txt', 'b.txt']
+    """)
     monkeypatch.setattr(
         'pytest_reqs.get_installed_distributions',
         lambda: [

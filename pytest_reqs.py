@@ -1,3 +1,4 @@
+from distutils.util import strtobool
 from glob import glob
 from itertools import chain
 
@@ -35,8 +36,11 @@ def pytest_addoption(parser):
 
 def pytest_sessionstart(session):
     config = session.config
-    config.ignore_local = config.getini("reqsignorelocal").lower() == 'true'
-    config.patterns = config.getini("reqsfilenamepatterns")
+    if not hasattr(config, "ignore_local"):
+        ignore_local = config.getini("reqsignorelocal") or "no"
+        config.ignore_local = strtobool(ignore_local)
+    if not hasattr(config, "patterns"):
+        config.patterns = config.getini("reqsfilenamepatterns")
 
 
 def pytest_collection_modifyitems(config, session, items):
