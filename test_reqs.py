@@ -142,3 +142,28 @@ def test_override_filenamepatterns(testdir, monkeypatch):
 
     result = testdir.runpytest("--reqs")
     assert 'passed' in result.stdout.str()
+
+
+@pytest.mark.parametrize('requirements', [
+    'foo',
+    'foo==1.0'
+])
+def test_outdated_version(requirements, mock_dist, testdir, monkeypatch):
+    testdir.makefile('.txt', requirements=requirements)
+    monkeypatch.setattr(
+        'pytest_reqs.get_installed_distributions', lambda: [mock_dist]
+    )
+    mock_dist.latest_version = '1.0.1'
+    monkeypatch.setattr(
+        'pytest_reqs.ListCommand.get_outdated', lambda *_, **__: [mock_dist]
+    )
+
+    result = testdir.runpytest("--reqs-outdated")
+    result.stdout.fnmatch_lines([
+        '*Distribution "foo" is outdated (%s -> %s)*' % (
+            mock_dist.version,
+            mock_dist.latest_version
+        ),
+        "*1 failed*",
+    ])
+    assert 'passed' not in result.stdout.str()
