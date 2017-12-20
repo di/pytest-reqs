@@ -1,6 +1,6 @@
 from glob import glob
 from itertools import chain
-from subprocess import check_output
+from subprocess import check_output, STDOUT
 from sys import executable
 
 from pip import get_installed_distributions
@@ -71,7 +71,7 @@ def check_requirements(config, session, items):
 
 def check_outdated_requirements(config, session, items):
     pip_outdated_dists_output = check_output(
-        [executable, '-m', 'pip', 'list', '--outdated']
+        [executable, '-m', 'pip', 'list', '--outdated'], stderr=STDOUT
     )
     if isinstance(pip_outdated_dists_output, bytes):
         pip_outdated_dists_output = pip_outdated_dists_output.decode()
