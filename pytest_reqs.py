@@ -1,7 +1,7 @@
 from distutils.util import strtobool
 from glob import glob
 from itertools import chain
-from subprocess import check_output, STDOUT
+from subprocess import STDOUT, check_output
 from sys import executable
 
 from pip import get_installed_distributions
