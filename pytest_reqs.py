@@ -1,8 +1,9 @@
 from glob import glob
 from itertools import chain
+from subprocess import check_output
+from sys import executable
 
 from pip import get_installed_distributions
-from pip.commands.list import ListCommand
 from pip.download import PipSession
 from pip.exceptions import InstallationError
 from pip.req import parse_requirements
@@ -46,28 +47,38 @@ def pytest_sessionstart(session):
 
 def pytest_collection_modifyitems(config, session, items):
     if config.option.reqs:
-        check_requirements(
-            config, session, items, get_installed_distributions(), ReqsItem
-        )
+        check_requirements(config, session, items)
     if config.option.reqs_outdated:
-        list_cmd = ListCommand()
-        options, args = list_cmd.parse_args([])
-        outdated_distributions = list_cmd.get_outdated(
-            get_installed_distributions(), options
-        )
-        check_requirements(
-            config, session, items, outdated_distributions, OutdatedReqsItem
-        )
+        check_outdated_requirements(config, session, items)
 
 
-def check_requirements(config, session, items, dists, reqs_item_cls):
+def get_reqs_filenames(config):
     patterns = config.patterns or DEFAULT_PATTERNS
-    filenames = set(chain.from_iterable(map(glob, patterns)))
-    distributions = dict((d.project_name.lower(), d) for d in dists)
+    return set(chain.from_iterable(map(glob, patterns)))
+
+
+def check_requirements(config, session, items):
+    installed_distributions = dict(
+        (d.project_name.lower(), d)
+        for d in get_installed_distributions()
+    )
 
     items.extend(
-        reqs_item_cls(filename, distributions, config, session)
-        for filename in filenames
+        ReqsItem(filename, installed_distributions, config, session)
+        for filename in get_reqs_filenames(config)
+    )
+
+
+def check_outdated_requirements(config, session, items):
+    pip_outdated_dists_output = check_output(
+        [executable, '-m', 'pip', 'list', '--outdated']
+    )
+    if isinstance(pip_outdated_dists_output, bytes):
+        pip_outdated_dists_output = pip_outdated_dists_output.decode()
+
+    items.extend(
+        OutdatedReqsItem(filename, pip_outdated_dists_output, config, session)
+        for filename in get_reqs_filenames(config)
     )
 
 
@@ -136,22 +147,19 @@ class ReqsItem(pytest.Item, pytest.File):
 
 
 class OutdatedReqsItem(ReqsItem):
-    def __init__(self, filename, outdated_distributions, config, session):
+    def __init__(self, filename, pip_outdated_dists_output, config, session):
         super(ReqsItem, self).__init__(
             filename, config=config, session=session
         )
         self.add_marker("reqs-outdated")
         self.filename = filename
-        self.outdated_distributions = outdated_distributions
+        self.pip_outdated_dists_output = pip_outdated_dists_output
         self.config = config
 
     def runtest(self):
-        requirements = self.get_requirements()
-        for name, req in self.outdated_distributions.items():
-            if name in requirements:
-                raise ReqsError(
-                    'Distribution "%s" is outdated (%s -> %s)' % (
-                        name,
-                        req.version,
-                        req.latest_version
-                    ))
+        for name in self.get_requirements():
+            for line in self.pip_outdated_dists_output.splitlines():
+                if line.startswith('%s ' % name):
+                    raise ReqsError(
+                        'Distribution "%s" is outdated (%s)' % (name, line)
+                    )
