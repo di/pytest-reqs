@@ -15,6 +15,9 @@ specified.
 It also has the added bonus of verifying that your requirements files are
 syntatically valid.
 
+Additionally, with the latest pip versions (9 and above), you can 
+check requirements files for updates.
+
 Usage
 -----
 
@@ -34,6 +37,12 @@ by default it will search for dependencies in the files matching:
 - ``requirements/*.pip``
 
 and the declared dependencies will be checked against the current environment.
+
+you can also type::
+
+    py.test --reqs-outdated
+
+for checking new versions of the declared dependencies.
 
 A little example
 ----------------
@@ -71,6 +80,14 @@ example, if there is not enough ``=`` symbols)::
     $ py.test --reqs
     ______________________________ requirements-check ______________________________
     Invalid requirement: 'foo=1.0.0' (from -r requirements.txt)
+
+When the new version of ``foo`` is available, just use ``--reqs-outdated`` 
+to find out about it::
+
+    $ py.test --reqs-outdated
+    ______________________________ requirements-check ______________________________
+    Distribution "foo" is outdated (from -r requirements.txt (line 1)), 
+    latest version is foo==1.0.1
 
 Configuring options
 -------------------
