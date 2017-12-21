@@ -3,7 +3,6 @@
 set -e
 
 ./bin/check
-./bin/test
 git checkout master
 git pull
 python3 setup.py sdist bdist_wheel
