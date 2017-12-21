@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+./bin/check
+./bin/test
+git checkout master
+git pull
+python3 setup.py sdist bdist_wheel
+twine upload dist/* -r pypi --skip-existing
