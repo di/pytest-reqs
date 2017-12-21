@@ -1,13 +1,17 @@
 from distutils.util import strtobool
+from distutils.version import LooseVersion
 from glob import glob
 from itertools import chain
-from subprocess import STDOUT, check_output
+from json import loads
+from os import devnull
+from subprocess import check_output
 from sys import executable
 
 from pip import get_installed_distributions
 from pip.download import PipSession
 from pip.exceptions import InstallationError
 from pip.req import parse_requirements
+from pkg_resources import get_distribution
 import pytest
 
 
@@ -74,16 +78,20 @@ def check_requirements(config, session, items):
 
 
 def check_outdated_requirements(config, session, items):
-    pip_outdated_dists_output = check_output(
-        [executable, '-m', 'pip', 'list', '--outdated'], stderr=STDOUT
-    )
-    if isinstance(pip_outdated_dists_output, bytes):
-        pip_outdated_dists_output = pip_outdated_dists_output.decode()
+    local_pip_version = LooseVersion(get_distribution('pip').version)
+    required_pip_version = LooseVersion('9.0.0')
 
-    items.extend(
-        OutdatedReqsItem(filename, pip_outdated_dists_output, config, session)
-        for filename in get_reqs_filenames(config)
-    )
+    if local_pip_version >= required_pip_version:
+        with open(devnull, 'w') as DEVNULL:
+            pip_outdated_dists = loads(check_output(
+                [executable, '-m', 'pip', 'list', '-o', '--format', 'json'],
+                stderr=DEVNULL
+            ))
+
+            items.extend(
+                OutdatedReqsItem(filename, pip_outdated_dists, config, session)
+                for filename in get_reqs_filenames(config)
+            )
 
 
 class PipOption:
@@ -151,19 +159,24 @@ class ReqsItem(pytest.Item, pytest.File):
 
 
 class OutdatedReqsItem(ReqsItem):
-    def __init__(self, filename, pip_outdated_dists_output, config, session):
+    def __init__(self, filename, pip_outdated_dists, config, session):
         super(ReqsItem, self).__init__(
             filename, config=config, session=session
         )
         self.add_marker("reqs-outdated")
         self.filename = filename
-        self.pip_outdated_dists_output = pip_outdated_dists_output
+        self.pip_outdated_dists = pip_outdated_dists
         self.config = config
 
     def runtest(self):
-        for name in self.get_requirements():
-            for line in self.pip_outdated_dists_output.splitlines():
-                if line.startswith('%s ' % name):
+        for name, req in self.get_requirements().items():
+            for dist in self.pip_outdated_dists:
+                if name == dist['name']:
                     raise ReqsError(
-                        'Distribution "%s" is outdated (%s)' % (name, line)
-                    )
+                        'Distribution "%s" is outdated (from %s), '
+                        'latest version is %s==%s' % (
+                            name,
+                            req.comes_from,
+                            name,
+                            dist['latest_version']
+                        ))

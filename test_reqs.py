@@ -1,4 +1,6 @@
+from distutils.version import LooseVersion
 import pip
+from pkg_resources import get_distribution
 from pretend import stub
 import pytest
 
@@ -175,20 +177,25 @@ def test_override_filenamepatterns_using_dynamic_config(testdir, monkeypatch):
     assert 'passed' in result.stdout.str()
 
 
+@pytest.mark.skipif(
+    LooseVersion('9.0.0') > LooseVersion(get_distribution('pip').version),
+    reason='incompatible pip version'
+)
 @pytest.mark.parametrize('requirements', [
     'foo',
     'foo==1.0'
 ])
 def test_outdated_version(requirements, testdir, monkeypatch):
     testdir.makefile('.txt', requirements=requirements)
-    pip_outdated_dists_output = 'foo - latest: 1.0.1'
+    pip_outdated_dists_output = '[{"name": "foo", "latest_version": "1.0.1"}]'
     monkeypatch.setattr(
         'pytest_reqs.check_output', lambda *_, **__: pip_outdated_dists_output
     )
 
     result = testdir.runpytest("--reqs-outdated")
     result.stdout.fnmatch_lines([
-        '*Distribution "foo" is outdated (%s)*' % (pip_outdated_dists_output),
+        '*Distribution "foo" is outdated (from -r requirements.txt (line 1)), '
+        'latest version is foo==1.0.1*',
         "*1 failed*",
     ])
     assert 'passed' not in result.stdout.str()
