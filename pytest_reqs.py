@@ -1,18 +1,31 @@
+
 from distutils.util import strtobool
-from distutils.version import LooseVersion
 from glob import glob
 from itertools import chain
 from json import loads
 from os import devnull
 from subprocess import check_output
 from sys import executable
+from warnings import warn
 
-from pip import get_installed_distributions
-from pip.download import PipSession
-from pip.exceptions import InstallationError
-from pip.req import parse_requirements
-from pkg_resources import get_distribution
+import packaging.version
 import pytest
+from pkg_resources import get_distribution
+
+max_version = packaging.version.parse('9.0.2')
+pip_version = packaging.version.parse(get_distribution('pip').version)
+if pip_version > max_version:
+    warn(
+        'Version pip=={} is possibly incompatible, highest '
+        'known compatible version is {}.'.format(
+            pip_version, max_version
+        )
+    )
+
+from pip import get_installed_distributions  # noqa
+from pip.download import PipSession  # noqa
+from pip.exceptions import InstallationError  # noqa
+from pip.req import parse_requirements  # noqa
 
 
 __version__ = '0.0.4'
@@ -23,34 +36,34 @@ DEFAULT_PATTERNS = [
 
 
 def pytest_addoption(parser):
-    group = parser.getgroup("general")
+    group = parser.getgroup('general')
     group.addoption(
         '--reqs', action='store_true',
-        help="check requirements files against what is installed"
+        help='check requirements files against what is installed'
     )
     group.addoption(
         '--reqs-outdated', action='store_true',
-        help="check requirements files for updates"
+        help='check requirements files for updates'
     )
     parser.addini(
-        "reqsignorelocal",
-        help="ignore local requirements (default: False)",
+        'reqsignorelocal',
+        help='ignore local requirements (default: False)',
     )
     parser.addini(
-        "reqsfilenamepatterns",
-        help="Override the default filename patterns to search (default:"
-             "req*.txt, req*.pip, requirements/*.txt, requirements/*.pip)",
-        type="linelist",
+        'reqsfilenamepatterns',
+        help='Override the default filename patterns to search (default:'
+             'req*.txt, req*.pip, requirements/*.txt, requirements/*.pip)',
+        type='linelist',
     )
 
 
 def pytest_sessionstart(session):
     config = session.config
-    if not hasattr(config, "ignore_local"):
-        ignore_local = config.getini("reqsignorelocal") or "no"
+    if not hasattr(config, 'ignore_local'):
+        ignore_local = config.getini('reqsignorelocal') or 'no'
         config.ignore_local = strtobool(ignore_local)
-    if not hasattr(config, "patterns"):
-        config.patterns = config.getini("reqsfilenamepatterns")
+    if not hasattr(config, 'patterns'):
+        config.patterns = config.getini('reqsfilenamepatterns')
 
 
 def pytest_collection_modifyitems(config, session, items):
@@ -78,8 +91,10 @@ def check_requirements(config, session, items):
 
 
 def check_outdated_requirements(config, session, items):
-    local_pip_version = LooseVersion(get_distribution('pip').version)
-    required_pip_version = LooseVersion('9.0.0')
+    local_pip_version = packaging.version.parse(
+        get_distribution('pip').version
+    )
+    required_pip_version = packaging.version.parse('9.0.0')
 
     if local_pip_version >= required_pip_version:
         with open(devnull, 'w') as DEVNULL:
@@ -111,7 +126,7 @@ class ReqsItem(pytest.Item, pytest.File):
         super(ReqsItem, self).__init__(
             filename, config=config, session=session
         )
-        self.add_marker("reqs")
+        self.add_marker('reqs')
         self.filename = filename
         self.installed_distributions = installed_distributions
         self.config = config
@@ -127,7 +142,7 @@ class ReqsItem(pytest.Item, pytest.File):
                 if r.name and self.filename in r.comes_from
             )
         except InstallationError as e:
-            raise ReqsError("%s (from -r %s)" % (
+            raise ReqsError('%s (from -r %s)' % (
                 e.args[0].split('\n')[0],
                 self.filename,
             ))
@@ -155,7 +170,7 @@ class ReqsItem(pytest.Item, pytest.File):
         return super(ReqsItem, self).repr_failure(excinfo)
 
     def reportinfo(self):
-        return (self.fspath, -1, "requirements-check")
+        return (self.fspath, -1, 'requirements-check')
 
 
 class OutdatedReqsItem(ReqsItem):
@@ -163,7 +178,7 @@ class OutdatedReqsItem(ReqsItem):
         super(ReqsItem, self).__init__(
             filename, config=config, session=session
         )
-        self.add_marker("reqs-outdated")
+        self.add_marker('reqs-outdated')
         self.filename = filename
         self.pip_outdated_dists = pip_outdated_dists
         self.config = config
