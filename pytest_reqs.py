@@ -12,7 +12,7 @@ import packaging.version
 import pytest
 from pkg_resources import get_distribution
 
-max_version = packaging.version.parse('9.0.2')
+max_version = packaging.version.parse('18.1.0')
 pip_version = packaging.version.parse(get_distribution('pip').version)
 if pip_version > max_version:
     warn(
