@@ -11,9 +11,10 @@ from warnings import warn
 import packaging.version
 import pytest
 from pkg_resources import get_distribution
+import pip_api
 
-max_version = packaging.version.parse('9.0.2')
-pip_version = packaging.version.parse(get_distribution('pip').version)
+max_version = packaging.version.parse('18.1.0')
+pip_version = packaging.version.parse(pip_api.version())
 if pip_version > max_version:
     warn(
         'Version pip=={} is possibly incompatible, highest '
@@ -21,12 +22,6 @@ if pip_version > max_version:
             pip_version, max_version
         )
     )
-
-from pip import get_installed_distributions  # noqa
-from pip.download import PipSession  # noqa
-from pip.exceptions import InstallationError  # noqa
-from pip.req import parse_requirements  # noqa
-
 
 __version__ = '0.0.4'
 
@@ -79,10 +74,7 @@ def get_reqs_filenames(config):
 
 
 def check_requirements(config, session, items):
-    installed_distributions = dict(
-        (d.project_name.lower(), d)
-        for d in get_installed_distributions()
-    )
+    installed_distributions = pip_api.installed_distributions()
 
     items.extend(
         ReqsItem(filename, installed_distributions, config, session)
@@ -112,8 +104,6 @@ def check_outdated_requirements(config, session, items):
 class PipOption:
     def __init__(self, config):
         self.skip_requirements_regex = '^-e' if config.ignore_local else ''
-        self.isolated_mode = False
-        self.default_vcs = None
 
 
 class ReqsError(Exception):
@@ -132,21 +122,15 @@ class ReqsItem(pytest.Item, pytest.File):
         self.config = config
 
     def get_requirements(self):
-        reqs = parse_requirements(
-            self.filename, session=PipSession(), options=PipOption(self.config)
-        )
         try:
-            name_to_req = dict(
-                (r.name.lower(), r)
-                for r in reqs
-                if r.name and self.filename in r.comes_from
+            return pip_api.parse_requirements(
+                self.filename, options=PipOption(self.config)
             )
-        except InstallationError as e:
+        except pip_api.exceptions.PipError as e:
             raise ReqsError('%s (from -r %s)' % (
                 e.args[0].split('\n')[0],
                 self.filename,
             ))
-        return name_to_req
 
     def runtest(self):
         for name, req in self.get_requirements().items():
