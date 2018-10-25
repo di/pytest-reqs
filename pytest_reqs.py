@@ -74,7 +74,10 @@ def get_reqs_filenames(config):
 
 
 def check_requirements(config, session, items):
-    installed_distributions = pip_api.installed_distributions()
+    installed_distributions = dict([
+        (name.lower(), req)
+        for name, req in pip_api.installed_distributions().items()
+    ])
 
     items.extend(
         ReqsItem(filename, installed_distributions, config, session)
