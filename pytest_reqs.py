@@ -8,6 +8,7 @@ from subprocess import check_output
 from sys import executable
 from warnings import warn
 
+import packaging.utils
 import packaging.version
 import pip_api
 from pkg_resources import get_distribution
@@ -75,7 +76,7 @@ def get_reqs_filenames(config):
 
 def check_requirements(config, session, items):
     installed_distributions = dict([
-        (name.lower(), req)
+        (packaging.utils.canonicalize_name(name), req)
         for name, req in pip_api.installed_distributions().items()
     ])
 
@@ -126,9 +127,12 @@ class ReqsItem(pytest.Item, pytest.File):
 
     def get_requirements(self):
         try:
-            return pip_api.parse_requirements(
-                self.filename, options=PipOption(self.config)
-            )
+            return {
+                packaging.utils.canonicalize_name(name): req
+                for name, req in pip_api.parse_requirements(
+                    self.filename, options=PipOption(self.config)
+                ).items()
+            }
         except pip_api.exceptions.PipError as e:
             raise ReqsError('%s (from -r %s)' % (
                 e.args[0].split('\n')[0],
