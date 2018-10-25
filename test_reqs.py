@@ -22,6 +22,7 @@ def mock_dist():
     'foo==1.0',
     'foo>=1.0',
     'foo<=1.0',
+    '# comment',
 ])
 def test_existing_requirement(requirements, mock_dist, testdir, monkeypatch):
     testdir.makefile('.txt', requirements=requirements)
