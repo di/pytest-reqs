@@ -17,11 +17,6 @@ def mock_dist():
     return stub(project_name='foo', version='1.0')
 
 
-@pytest.fixture
-def mock_dist_titlecase():
-    return stub(project_name='Foo', version='1.0')
-
-
 @pytest.mark.parametrize('requirements', [
     'foo',
     'Foo',
@@ -41,17 +36,24 @@ def test_existing_requirement(requirements, mock_dist, testdir, monkeypatch):
     assert 'passed' in result.stdout.str()
 
 
-@pytest.mark.parametrize('requirements', [
-    'foo',
-    'Foo',
-    'foo==1.0',
-    'Foo==1.0',
+@pytest.mark.parametrize('requirements, dist', [
+    ('foo-bar', stub(project_name='foo-bar', version='1.0')),
+    ('foo-bar==1.0', stub(project_name='foo-bar', version='1.0')),
+    # Capitalization
+    ('Foo-bar', stub(project_name='foo-bar', version='1.0')),
+    ('foo-bar', stub(project_name='Foo-bar', version='1.0')),
+    # Periods
+    ('foo.bar', stub(project_name='foo-bar', version='1.0')),
+    ('foo-bar', stub(project_name='foo.bar', version='1.0')),
+    # Underscores
+    ('foo_bar', stub(project_name='foo-bar', version='1.0')),
+    ('foo-bar', stub(project_name='foo_bar', version='1.0')),
 ])
-def test_allow_titlecase(requirements, mock_dist_titlecase, testdir, monkeypatch):
+def test_canonicalization(requirements, dist, testdir, monkeypatch):
     testdir.makefile('.txt', requirements=requirements)
     monkeypatch.setattr(
         'pytest_reqs.pip_api.installed_distributions',
-        lambda: {mock_dist_titlecase.project_name: mock_dist_titlecase}
+        lambda: {dist.project_name: dist}
     )
 
     result = testdir.runpytest("--reqs")
@@ -137,17 +139,6 @@ def test_local_requirement_ignored_using_dynamic_config(testdir, monkeypatch):
         config.ignore_local = True
     """)
     monkeypatch.setattr('pytest_reqs.pip_api.installed_distributions', lambda: {})
-
-    result = testdir.runpytest("--reqs")
-    assert 'passed' in result.stdout.str()
-
-
-def test_non_lowered_requirement(mock_dist, testdir, monkeypatch):
-    testdir.makefile('.txt', requirements='Foo')
-    monkeypatch.setattr(
-        'pytest_reqs.pip_api.installed_distributions',
-        lambda: {mock_dist.project_name: mock_dist}
-    )
 
     result = testdir.runpytest("--reqs")
     assert 'passed' in result.stdout.str()
