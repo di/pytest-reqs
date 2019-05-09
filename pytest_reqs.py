@@ -150,7 +150,7 @@ class ReqsItem(pytest.Item, pytest.File):
             if not req.specifier.contains(installed_distribution.version):
                 raise ReqsError(
                     'Distribution "%s" requires %s but %s is installed' % (
-                        installed_distribution.project_name,
+                        installed_distribution.name,
                         req,
                         installed_distribution.version,
                     ))
