@@ -1,3 +1,11 @@
+0.2.1
+----------------------------------------------
+
+- Drop support for Python 3.4
+- Add support for pip 19.0 through 19.1.1
+- Fix issue with wrong attribute name (#43)
+
+
 0.2.0
 ----------------------------------------------
 
