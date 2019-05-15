@@ -26,6 +26,15 @@ __version__ = "0.0.4"
 DEFAULT_PATTERNS = ["req*.txt", "req*.pip", "requirements/*.txt", "requirements/*.pip"]
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "reqs: check requirements files against what is installed"
+    )
+    config.addinivalue_line(
+        "markers", "reqs-outdated: check requirements files for updates"
+    )
+
+
 def pytest_addoption(parser):
     group = parser.getgroup("general")
     group.addoption(
